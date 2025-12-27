@@ -58,6 +58,22 @@ Data-driven decision-making powered by real-time KPIs and interactive visualizat
 
 GearGuard is built on a modern, scalable full-stack architecture:
 
+```mermaid
+graph TD
+    subgraph Frontend [Next.js]
+        A[UI Components] --> B[TanStack Query]
+    end
+    subgraph Backend [NestJS]
+        C[REST API] --> D[Business Logic]
+        D --> E[Prisma ORM]
+    end
+    subgraph Database [PostgreSQL]
+        F[(Data Store)]
+    end
+    B --> C
+    E --> F
+```
+
 - **Frontend**: [Next.js 15 (App Router)](https://nextjs.org/) with [Tailwind CSS v4](https://tailwindcss.com/) and [TanStack Query](https://tanstack.com/query/latest).
 - **Backend**: [NestJS (TypeScript)](https://nestjs.com/) - A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
 - **Persistence**: [Prisma ORM](https://www.prisma.io/) with [PostgreSQL](https://www.postgresql.org/).
@@ -74,6 +90,7 @@ For deep-dives into the system's design and logic, refer to our specialized docu
 - [**Business Workflows**](./docs/workflows.md): Detailed explanation of Breakdown vs. Preventive flows and Scrap logic.
 - [**API Contract**](./docs/api_contract.md): Interacting with the GearGuard services.
 - [**Future Scope & Extensions**](./docs/future_scope.md): Roadmap for IoT and AI integration.
+- [**Team Presentation Script**](./docs/team_presentation.md): A professional role-based walkthrough for interviews and reviews.
 
 ---
 
