@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  TECHNICIAN
+  EMPLOYEE
+}
+
+enum EquipmentStatus {
+  ACTIVE
+  SCRAPPED
+}
+
+enum MaintenanceType {
+  CORRECTIVE
+  PREVENTIVE
+}
+
+enum RequestStage {
+  NEW
+  IN_PROGRESS
+  REPAIRED
+  SCRAP
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teamMemberships     MaintenanceTeam[]    @relation("TeamMembers")
+  assignedRequests    MaintenanceRequest[] @relation("AssignedTechnician")
+  createdRequests     MaintenanceRequest[] @relation("RequestCreator")
+  requestLogs         RequestLog[]
+  assignedEquipments  Equipment[]          @relation("AssignedEmployee")
+
+  @@map("users")
+}
+
+model MaintenanceTeam {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  members            User[]               @relation("TeamMembers")
+  equipment          Equipment[]
+  maintenanceRequests MaintenanceRequest[]
+
+  @@map("maintenance_teams")
+}
+
+model Equipment {
+  id                      String          @id @default(uuid())
+  name                    String
+  serialNumber            String          @unique
+  department              String
+  assignedEmployeeId      String?
+  purchaseDate            DateTime
+  warrantyExpiry          DateTime?
+  location                String
+  category                String
+  defaultMaintenanceTeamId String
+  defaultTechnicianId     String?
+  status                  EquipmentStatus @default(ACTIVE)
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  // Relations
+  assignedEmployee       User?               @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id])
+  defaultMaintenanceTeam MaintenanceTeam     @relation(fields: [defaultMaintenanceTeamId], references: [id])
+  maintenanceRequests    MaintenanceRequest[]
+
+  @@index([department])
+  @@index([category])
+  @@index([status])
+  @@index([defaultMaintenanceTeamId])
+  @@map("equipment")
+}
+
+model MaintenanceRequest {
+  id                   String          @id @default(uuid())
+  subject              String
+  description          String
+  type                 MaintenanceType
+  equipmentId          String
+  maintenanceTeamId    String
+  assignedTechnicianId String?
+  scheduledDate        DateTime?
+  durationHours        Float?
+  stage                RequestStage    @default(NEW)
+  createdById          String
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  // Relations
+  equipment         Equipment       @relation(fields: [equipmentId], references: [id])
+  maintenanceTeam   MaintenanceTeam @relation(fields: [maintenanceTeamId], references: [id])
+  assignedTechnician User?          @relation("AssignedTechnician", fields: [assignedTechnicianId], references: [id])
+  createdBy         User            @relation("RequestCreator", fields: [createdById], references: [id])
+  logs              RequestLog[]
+
+  @@index([equipmentId])
+  @@index([maintenanceTeamId])
+  @@index([stage])
+  @@index([scheduledDate])
+  @@index([type])
+  @@map("maintenance_requests")
+}
+
+model RequestLog {
+  id        String   @id @default(uuid())
+  requestId String
+  action    String
+  note      String?
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  request MaintenanceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user    User               @relation(fields: [userId], references: [id])
+
+  @@index([requestId])
+  @@map("request_logs")
+}
